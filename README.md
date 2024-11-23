@@ -11,7 +11,7 @@
 ### Content : 
 ## Problem 1 : Using TCP to download files
 
-Set up : 
+Set up folder ```TCP```: 
 * Tải các thư viện cần thiết
     ```bash
    pip install -r requirements.txt
