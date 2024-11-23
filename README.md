@@ -6,7 +6,7 @@ Cách chạy folder TCP
 * Tạo thư mục ```server/server_files/``` và add file mà client muốn tải vào đó
 * Chạy file python sau để tạo ```server/file_list.txt``` chứa các tên file và dung lượng 
    ```bash
-   python server/list_files_to_txt.py
+   python server/create_file_list.py
    ```
 
 * Edit file ```input.txt``` của client
