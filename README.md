@@ -1,4 +1,17 @@
-Cách chạy folder TCP 
+# Socket Programming Project 2024
+
+
+## Trường Đại học Khoa học Tự nhiên - Đại học Quốc gia TPHCM (HCMUS - VNU)
+
+## Bộ môn Mạng máy tính (Computer Networking)
+### Members :
+* Nguyễn Trần Phú Quý - 23127113
+* Nguyễn Hải Đăng - 
+* Lê Nhật Khôi -
+### Content : 
+## Problem 1 : Using TCP to download files
+
+Set up : 
 * Tải các thư viện cần thiết
     ```bash
    pip install -r requirements.txt
