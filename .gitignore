@@ -1,0 +1,4 @@
+TCP/client/downloads/*
+TCP/client/file_list.txt
+TCP/server/server_files/*
+TCP/server/file_list.txt
