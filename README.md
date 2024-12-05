@@ -6,8 +6,8 @@
 ## Bộ môn Mạng máy tính (Computer Networking)
 ### Members :
 * Nguyễn Trần Phú Quý - 23127113
-* Nguyễn Hải Đăng - 
-* Lê Nhật Khôi -
+* Nguyễn Hải Đăng - 23127165
+* Lê Nhật Khôi - 23127004
 ### Content : 
 ## Problem 1 : Using TCP to download files
 
