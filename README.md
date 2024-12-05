@@ -22,7 +22,7 @@ cd TCP
 ```
 
 * Tạo thư mục ```server/server_files/``` và add file mà client muốn tải vào đó
-* Di chuyển vào đuongwf dẫn ```/server```
+* Di chuyển vào đường dẫn ```/server```
 * Chạy file python sau để tạo ```file_list.txt``` chứa các tên file và dung lượng 
    ```bash
    python create_file_list.py
