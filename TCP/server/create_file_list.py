@@ -1,7 +1,7 @@
 import os
 
 """
-chạy file này khi add file mới vào thư mục /server_files/ để tự động thay đổi file_list.txt
+Run this file when adding new file into the directory /server_files/ to automatically change file_list.txt
 """
 
 def list_files_with_sizes(folder_path, output_file):

@@ -13,7 +13,7 @@ def handle_client(client_socket):
         command, *args = request.split()
 
         if command == "LIST":
-            # Gửi file_list.txt về client
+            # Send file_list.txt to client
             with open(FILE_LIST, "rb") as f:
                 client_socket.sendall(f.read())
 
@@ -37,7 +37,7 @@ def handle_client(client_socket):
         
 
 def update_file_list():
-    # Cập nhật file_list.txt với các file và kích thước
+    # Update file_list.txt with file and file's size
     with open(FILE_LIST, "w") as f:
         for filename in os.listdir(FILE_DIR):
             filepath = os.path.join(FILE_DIR, filename)
