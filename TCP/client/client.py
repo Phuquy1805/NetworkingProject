@@ -93,6 +93,8 @@ def download_file(filename, file_size):
 
     for i in range(4):
         offset = i * chunk_size
+        if i == 3:  # Last chunk takes the remaining bytes
+            chunk_size = file_size - offset
         part = i + 1
         # Tạo thread để tải chunk
         t = threading.Thread(target=download_chunk, args=(filename, offset, chunk_size, part, 4))
@@ -112,11 +114,11 @@ def client_main():
     Vòng lặp chính của client: chỉ tải các file có trong INPUT_FILE.
     """
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+    
+    # Lấy danh sách file từ server
+    server_files = fetch_file_list()
 
     while True:
-        # Lấy danh sách file từ server
-        server_files = fetch_file_list()
-
         # Lấy danh sách file cần tải từ INPUT_FILE
         input_files = read_input_file()
 
@@ -134,4 +136,5 @@ if __name__ == "__main__":
     try:
         client_main()
     except KeyboardInterrupt:
+        os.remove("file_list.txt") # delete file_list.txt of client
         print("\nClient exited.")

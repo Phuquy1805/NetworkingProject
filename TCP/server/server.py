@@ -34,6 +34,7 @@ def handle_client(client_socket):
         print(f"Error handling client: {e}")
     finally:
         client_socket.close()
+        
 
 def update_file_list():
     # Cập nhật file_list.txt với các file và kích thước
