@@ -9,12 +9,13 @@
 * Nguyễn Hải Đăng - 23127165
 * Lê Nhật Khôi - 23127004
 ### Content : 
-## Problem 1 : Using TCP to download files
-
  Tải các thư viện cần thiết
 ```bash
-   pip install -r requirements.txt
+pip install -r requirements.txt
 ```
+## Problem 1 : Using TCP to download files
+
+
 Set up folder ```TCP```: 
 ```bash
 cd TCP
@@ -36,5 +37,5 @@ cd TCP
    Trên máy client 
    ```bash
    cd client
-   python client/client.py
+   python client.py
    ```
