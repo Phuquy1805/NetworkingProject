@@ -2,3 +2,7 @@ TCP/client/downloads/*
 TCP/client/file_list.txt
 TCP/server/server_files/*
 TCP/server/file_list.txt
+UDP/client/downloads/*
+UDP/client/file_list.txt
+UDP/server/server_files/*
+UDP/server/file_list.txt
