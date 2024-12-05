@@ -6,20 +6,20 @@ import tqdm
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000
 DOWNLOAD_DIR = "downloads"
-INPUT_FILE = "input.txt"  # File chứa danh sách các tệp cần tải
+INPUT_FILE = "input.txt"  # wanted files
 
-# Lưu các file đã tải để tránh tải lại
+# A set to avoid redownload file
 downloaded_files = set()
 
 def fetch_file_list():
     """
-    Kết nối tới server để tải file_list.txt, sau đó phân tích và trả về danh sách file.
+    Send a LIST command for server, server then gives the client the file_list.txt which will be parsed for filenames and their sizes
     """
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((SERVER_HOST, SERVER_PORT))
-    client.sendall(b"LIST")  # Yêu cầu danh sách file
+    client.sendall(b"LIST")  # LIST command
     
-    # Nhận file_list.txt từ server
+    # Client recieves file_list.txt
     with open("file_list.txt", "wb") as f:
         while True:
             data = client.recv(1024)
@@ -28,24 +28,25 @@ def fetch_file_list():
             f.write(data)
     client.close()
 
-    # Phân tích file_list.txt để lấy danh sách file và kích thước
-    files = {}
+    # Parse file_list.txt to obtain filenames and their sizes
+    
+    files = {} # A dictionary {filename:size}
     with open("file_list.txt", "r") as f:
         for line in f:
             filename, size = line.strip().split()
-            files[filename] = int(size)  # Tạo dictionary {tên_file: kích_thước}
+            files[filename] = int(size)  # Update dictionary
     return files
 
 def read_input_file():
     """
-    Đọc danh sách các tệp cần tải từ INPUT_FILE.
+    Read INPUT_FILE and get wanted filenames
     """
     input_files = []
     if os.path.exists(INPUT_FILE):
         with open(INPUT_FILE, "r") as f:
             for line in f:
                 filename = line.strip()
-                if filename:  # Bỏ qua dòng trống
+                if filename:  # skip blank lines
                     input_files.append(filename)
     return input_files
 
@@ -53,13 +54,14 @@ from tqdm import tqdm  # Import tqdm for the progress bar
 
 def download_chunk(filename, offset, chunk_size, part, total_parts):
     """
-    Tải một phần (chunk) của file từ server với thanh tiến trình.
+    Client sends a DOWNLOAD command with arguments : filename, chunksize, partNumber, totalPart
+    Server will begins downloading the requested chunk(s)
     """
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((SERVER_HOST, SERVER_PORT))
     client.sendall(f"DOWNLOAD {filename} {offset} {chunk_size}".encode())
     
-    # Ghi dữ liệu chunk vào file tạm thời
+    # Create temporary part files
     with open(f"{DOWNLOAD_DIR}/{filename}.part{part}", "wb") as f:
         with tqdm(total=chunk_size, unit="B", unit_scale=True, desc=f"{filename} part {part}/{total_parts}", leave=True) as pbar:
             while True:
@@ -67,26 +69,31 @@ def download_chunk(filename, offset, chunk_size, part, total_parts):
                 if not data:
                     break
                 f.write(data)
-                pbar.update(len(data))  # Cập nhật tiến trình
+                pbar.update(len(data))  # Progressbar handling
     client.close()
-    # print(f"Completed downloading {filename} part {part}/{total_parts}")
 
 
 def merge_file(filename, total_parts):
     """
-    Ghép các chunk thành file hoàn chỉnh.
+    Merge file from the temporary part files
     """
     with open(f"{DOWNLOAD_DIR}/{filename}", "wb") as f:
         for part in range(1, total_parts + 1):
             part_path = f"{DOWNLOAD_DIR}/{filename}.part{part}"
             with open(part_path, "rb") as part_file:
                 f.write(part_file.read())
-            os.remove(part_path)  # Xóa file chunk sau khi ghép xong
-    print(f"File {filename} đã được ghép thành công.")
+            os.remove(part_path)  # deleted merged chunks
+    print(f"File {filename} has been merged successfully.")
 
 def download_file(filename, file_size):
     """
-    Chia file thành 4 chunk, tải xuống song song và ghép lại.
+    Split file into 4 chunks, with the last chunk holds the remaining bytes
+    For example : 
+    test.zip has 102 bytes
+    test.zip.part 1: 25 bytes
+    test.zip.part 2: 25 bytes
+    test.zip.part 3: 25 bytes
+    test.zip.part 4: 27 bytes
     """
     chunk_size = file_size // 4
     threads = []
@@ -96,40 +103,40 @@ def download_file(filename, file_size):
         if i == 3:  # Last chunk takes the remaining bytes
             chunk_size = file_size - offset
         part = i + 1
-        # Tạo thread để tải chunk
+        # create thread to download chunk
         t = threading.Thread(target=download_chunk, args=(filename, offset, chunk_size, part, 4))
         threads.append(t)
         t.start()
 
-    # Chờ tất cả các thread tải xong
+    # Wait for all threads to finish downloading
     for t in threads:
         t.join()
     
-    # Ghép các chunk thành file hoàn chỉnh
+    # Merge chunks into completed file
     merge_file(filename, 4)
     print(f"Downloaded {filename} successfully!")
 
 def client_main():
     """
-    Vòng lặp chính của client: chỉ tải các file có trong INPUT_FILE.
+    Main client loop: only download wanted files in INPUT_FILE.
     """
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     
-    # Lấy danh sách file từ server
+    # get file list from the server (file_list.txt)
     server_files = fetch_file_list()
 
     while True:
-        # Lấy danh sách file cần tải từ INPUT_FILE
+        # get filenames from INPUT_FILE (input.txt)
         input_files = read_input_file()
 
         for filename in input_files:
-            # Chỉ tải nếu file nằm trong danh sách server và chưa tải
+            # Only download available and not yet downloaded file
             if filename in server_files and filename not in downloaded_files:
                 print(f"Starting download for: {filename} ({server_files[filename]} bytes)")
                 download_file(filename, server_files[filename])
                 downloaded_files.add(filename)
 
-        # Chờ 5 giây trước khi kiểm tra lại danh sách file
+        # Wait 5s after checking INPUT_FILE for additional file(s)
         time.sleep(5)
 
 if __name__ == "__main__":

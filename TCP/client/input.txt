@@ -1,6 +1,7 @@
 test1.png
 test3.jpg
-test6.bin
 test4.jpg
 test2.mp4
-abcdaljwgkha
+test7.pcapng
+test5.zip
+test6.bin
