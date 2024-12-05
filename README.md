@@ -28,7 +28,7 @@ cd TCP
    python create_file_list.py
    ```
 
-* Edit file ```client/input.txt``` của client
+* Ghi các tên file client cần tải vào ```client/input.txt```
 * Trên máy server
    ```bash
    cd server
