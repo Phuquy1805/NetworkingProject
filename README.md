@@ -11,23 +11,30 @@
 ### Content : 
 ## Problem 1 : Using TCP to download files
 
-Set up folder ```TCP```: 
-* Tải các thư viện cần thiết
-    ```bash
+ Tải các thư viện cần thiết
+```bash
    pip install -r requirements.txt
-   ```
+```
+Set up folder ```TCP```: 
+```bash
+cd TCP
+```
+
 * Tạo thư mục ```server/server_files/``` và add file mà client muốn tải vào đó
-* Chạy file python sau để tạo ```server/file_list.txt``` chứa các tên file và dung lượng 
+* Di chuyển vào đuongwf dẫn ```/server```
+* Chạy file python sau để tạo ```file_list.txt``` chứa các tên file và dung lượng 
    ```bash
-   python server/create_file_list.py
+   python create_file_list.py
    ```
 
-* Edit file ```input.txt``` của client
+* Edit file ```client/input.txt``` của client
 * Trên máy server
    ```bash
-   python server/server.py
+   cd server
+   python server.py
    ```
    Trên máy client 
    ```bash
+   cd client
    python client/client.py
    ```
