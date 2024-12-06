@@ -23,10 +23,7 @@ cd TCP
 
 * Tạo thư mục ```server/server_files/``` và add file mà client muốn tải vào đó
 * Di chuyển vào đường dẫn ```/server```
-* Chạy file python sau để tạo ```file_list.txt``` chứa các tên file và dung lượng 
-   ```bash
-   python create_file_list.py
-   ```
+
 
 * Ghi các tên file client cần tải vào ```client/input.txt```
 * Trên máy server
@@ -34,7 +31,7 @@ cd TCP
    cd server
    python server.py
    ```
-   Trên máy client 
+* Trên máy client 
    ```bash
    cd client
    python client.py
@@ -42,4 +39,22 @@ cd TCP
 ## Problem 2 : Using UDP to download files
 
 
-/// UNDER CONSTRUCION ///
+Set up folder ```UDP```: 
+```bash
+cd UDP
+```
+* Tạo thư mục ```server/server_files/``` và add file mà client muốn tải vào đó
+* Di chuyển vào đường dẫn ```/server```
+
+
+* Ghi các tên file client cần tải vào ```client/input.txt```
+* Trên máy server
+  ```bash
+  cd server
+  python server.py
+  ```
+* Trên máy client 
+ ```bash
+ cd client
+ python client.py
+ ```
