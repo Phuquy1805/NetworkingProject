@@ -54,7 +54,7 @@ cd UDP
   python server.py
   ```
 * Trên máy client 
- ```bash
- cd client
- python client.py
- ```
+  ```bash
+  cd client
+  python client.py
+  ```
