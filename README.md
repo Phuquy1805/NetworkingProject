@@ -10,7 +10,8 @@
 * Lê Nhật Khôi - 23127004
 
 ### Content : 
-Project description : https://docs.google.com/document/d/1ART-HEw2Z0uDu-jkQ1kyZth6CaY6gXQgrOHWDCACGcE/edit?tab=t.0
+Project : https://docs.google.com/document/d/1ART-HEw2Z0uDu-jkQ1kyZth6CaY6gXQgrOHWDCACGcE/edit?tab=t.0
+
  Tải các thư viện cần thiết
 ```bash
 pip install -r requirements.txt
