@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ## Problem 1 : Using TCP to download files
 
 
-# Set up 
+### Set up 
 ```bash
 cd TCP
 ```
@@ -36,12 +36,12 @@ cd TCP
    cd client
    python client.py
    ```
-# Demo video
+### Demo video
 ***coming soon***
 ## Problem 2 : Using UDP to download files
 
 
-# Set up
+### Set up
 ```bash
 cd UDP
 ```
@@ -55,10 +55,10 @@ cd UDP
   cd server
   python server.py
   ```
- # Demo video
- ***coming soon***
 * Trên máy client 
   ```bash
   cd client
   python client.py
   ```
+### Demo video
+ ***coming soon***
