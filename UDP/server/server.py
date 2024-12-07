@@ -2,7 +2,7 @@ import socket
 import os
 import threading
 import hashlib
-from tqdm import tqdm
+
 
 # Server configuration
 SERVER_HOST = "127.0.0.1"
@@ -50,8 +50,6 @@ def handle_download(server_socket, client_addr, filename):
     acked_chunks = set()
     window_start = 0
 
-    # Initialize a loading bar for tracking download progress
-    loading_bar = tqdm(total=total_chunks, desc=f"Downloading {filename}", unit="chunk")
 
     def resend_chunk(seq_num):
         """Resend a specific chunk if it hasn't been acknowledged."""
@@ -69,7 +67,6 @@ def handle_download(server_socket, client_addr, filename):
                 if ack.startswith(b"ACK:"):    
                     seq_num = int(ack.split(b":")[1])
                     acked_chunks.add(seq_num)
-                    loading_bar.update(1)  # Update the loading bar on receiving an ACK
                     
                 elif ack.startswith(b"DONE:"):
                     print(f"Client finished receiving {filename}.")
@@ -103,7 +100,6 @@ def handle_download(server_socket, client_addr, filename):
             window_start += 1
 
     ack_thread.join()  # Wait for the ACK thread to finish
-    loading_bar.close()  # Close the loading bar after completion
     server_socket.sendto(b"END", client_addr)  # Signal the end of the transfer
 
 def handle_client(server_socket, data, client_addr):

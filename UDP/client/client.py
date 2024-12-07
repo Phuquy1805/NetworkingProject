@@ -67,15 +67,18 @@ def download_file(filename, file_size):
     CHUNK_SIZE = fetch_chunk_size(filename)
     print(f"Using chunk size: {CHUNK_SIZE} bytes")
     
+    
     # Calculate total chunks based on file size and chunk size
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
     received_chunks = {}
-
+    
+    
     def receive_chunks():
         """Receive file chunks from the server and send ACKs."""
-        while len(received_chunks) < total_chunks:
+        while True:
             packet, _ = client_socket.recvfrom(65535)
             if packet == b"END":
+                print(f"Downloaded {filename} successfully!")
                 break
 
             try:
@@ -87,6 +90,7 @@ def download_file(filename, file_size):
                 if calculate_checksum(data) == checksum:
                     received_chunks[seq] = data
                     client_socket.sendto(f"ACK:{seq}".encode(), (SERVER_HOST, SERVER_PORT))
+
                 else:
                     print(f"Corrupted chunk {seq}, requesting retransmission...")
             except Exception as e:
@@ -101,12 +105,12 @@ def download_file(filename, file_size):
     
     # Notify the server that the download is complete
     client_socket.sendto(f"DONE:{filename}".encode(), (SERVER_HOST, SERVER_PORT))
-    
+
     # Write the received chunks to a file
     with open(os.path.join(DOWNLOAD_DIR, filename), "wb") as f:
         for seq in range(total_chunks):
             f.write(received_chunks[seq])
-    print(f"Downloaded {filename} successfully!")
+    
 
 def client_main():
     """Main function to control the client download process."""
