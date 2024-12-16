@@ -1,7 +1,0 @@
-test1.png
-test3.jpg
-test4.jpg
-test2.mp4
-test7.pcapng
-test5.zip
-test6.bin
