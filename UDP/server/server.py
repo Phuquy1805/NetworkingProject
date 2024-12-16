@@ -39,7 +39,7 @@ def update_file_list():
                 size = os.path.getsize(filepath)
                 f.write(f"{filename} {size}\n")  # Write filename and size to file
 
-def handle_get_chunk_size(server_socket, client_addr, filename):
+def handle_get_chunk_size(server_socket, client_addr):
     """Send the current CHUNK_SIZE to the client."""
     server_socket.sendto(str(CHUNK_SIZE).encode(), client_addr)
 
@@ -130,8 +130,7 @@ def handle_client(server_socket, data, client_addr):
         filename = args[0]
         handle_download(server_socket, client_addr, filename)  # Handle DOWNLOAD command
     elif command == "GET_CHUNK_SIZE":
-        filename = args[0]
-        handle_get_chunk_size(server_socket, client_addr, filename)  # Handle GET_CHUNK_SIZE command
+        handle_get_chunk_size(server_socket, client_addr)  # Handle GET_CHUNK_SIZE command
 
 def server_main():
     """Main server loop to handle incoming connections."""

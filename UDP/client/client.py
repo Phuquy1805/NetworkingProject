@@ -18,10 +18,10 @@ def calculate_checksum(data):
     """Calculate and return the MD5 checksum of the given data."""
     return hashlib.md5(data).hexdigest()
 
-def fetch_chunk_size(filename):
+def fetch_chunk_size():
     """Send a request to the server for the chunk size for a given filename."""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client_socket.sendto(f"GET_CHUNK_SIZE {filename}".encode(), (SERVER_HOST, SERVER_PORT))
+    client_socket.sendto(f"GET_CHUNK_SIZE".encode(), (SERVER_HOST, SERVER_PORT))
 
     # Receive the chunk size from the server
     chunk_size_data, _ = client_socket.recvfrom(1024)
@@ -78,9 +78,9 @@ def download_file(filename, file_size):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client_socket.sendto(f"DOWNLOAD {filename}".encode(), (SERVER_HOST, SERVER_PORT))
 
-    # Fetch the chunk size for this file
+    # Fetch chunk size from server's end
     global CHUNK_SIZE
-    CHUNK_SIZE = fetch_chunk_size(filename)
+    CHUNK_SIZE = fetch_chunk_size()
     print(f"Using chunk size: {CHUNK_SIZE} bytes")
     
     
