@@ -120,7 +120,7 @@ def download_file(filename, file_size):
         time.sleep(0.1)
     
     # Notify the server that the download is complete
-    client_socket.sendto(f"DONE:{filename}".encode(), (SERVER_HOST, SERVER_PORT))
+    client_socket.sendto(f"DONE {filename}".encode(), (SERVER_HOST, SERVER_PORT))
 
     # Write the received chunks to a file
     with open(os.path.join(DOWNLOAD_DIR, filename), "wb") as f:

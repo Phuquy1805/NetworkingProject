@@ -83,7 +83,7 @@ def handle_download(server_socket, client_addr, filename):
                     seq_num = int(ack.split(b":")[1])
                     acked_chunks.add(seq_num)
                     
-                elif ack.startswith(b"DONE:"):
+                elif ack.startswith(b"DONE"):
                     print(f"Client finished receiving {filename}.")
                     break  # Stop waiting for more ACKs
             except socket.timeout:
