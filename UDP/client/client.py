@@ -134,7 +134,6 @@ def client_main():
     server_files = fetch_file_list()
     files_displayed = False
     
-    
     while True:
         input_files = read_input_file()
         

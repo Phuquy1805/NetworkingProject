@@ -2,7 +2,7 @@ import socket
 import threading
 import os
 import time
-import tqdm
+from tqdm import tqdm  # Import tqdm for the progress bar
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000
 DOWNLOAD_DIR = "downloads"
@@ -49,8 +49,20 @@ def read_input_file():
                 if filename:  # skip blank lines
                     input_files.append(filename)
     return input_files
-
-from tqdm import tqdm  # Import tqdm for the progress bar
+ 
+def display_available_files(files):
+    """Display available files and their sizes."""
+    print("\n===== Available Files =====")
+    print(f"{'Filename':<20} Size (bytes)")
+    print("-" * 35)
+    
+    for filename, size in files.items():
+        # Format size with comma separators for readability
+        formatted_size = f"{size:,}"
+        print(f"{filename:<20} {formatted_size}")
+    
+    print("\n=== Total Files: {} ===".format(len(files)))
+    print("To download, add filenames to input.txt, one per line.")
 
 def download_chunk(filename, offset, chunk_size, part, total_parts):
     """
@@ -124,11 +136,16 @@ def client_main():
     
     # get file list from the server (file_list.txt)
     server_files = fetch_file_list()
-
+    files_displayed = False
+    
     while True:
         # get filenames from INPUT_FILE (input.txt)
         input_files = read_input_file()
-
+        
+        if not input_files and not files_displayed:
+            display_available_files(server_files)
+            files_displayed = True
+        
         for filename in input_files:
             # Only download available and not yet downloaded file
             if filename in server_files and filename not in downloaded_files:
