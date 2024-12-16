@@ -28,7 +28,7 @@ cd TCP
 * Di chuyển vào đường dẫn ```/server```
 
 
-* Ghi các tên file client cần tải vào ```client/input.txt```
+
 * Trên máy server
    ```bash
    cd server
@@ -39,6 +39,7 @@ cd TCP
    cd client
    python client.py
    ```
+Ghi các tên file client cần tải vào ```client/input.txt```
 ### Demo video
 ***coming soon***
 ## Problem 2 : Using UDP to download files
@@ -52,7 +53,7 @@ cd UDP
 * Di chuyển vào đường dẫn ```/server```
 
 
-* Ghi các tên file client cần tải vào ```client/input.txt```
+
 * Trên máy server
   ```bash
   cd server
@@ -63,5 +64,6 @@ cd UDP
   cd client
   python client.py
   ```
+Ghi các tên file client cần tải vào ```client/input.txt```
 ### Demo video
  ***coming soon***
