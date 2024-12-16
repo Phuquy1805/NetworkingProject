@@ -118,8 +118,8 @@ sequenceDiagram
         end
     end
     
-    Client->>Server: DONE filename
-    Server-->>Client: END transfer
+    Server-->>Client: END 
+    Client->>Server: DONE 
 ```
 ### Demo video
  ***coming soon***
