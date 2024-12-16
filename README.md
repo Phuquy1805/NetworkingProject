@@ -65,5 +65,34 @@ cd UDP
   python client.py
   ```
 Ghi các tên file client cần tải vào ```client/input.txt```
+### Comunication Diagram 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+    
+    # File List Request
+    Client->>Server: LIST command
+    Server-->>Client: file_list.txt content
+    
+    # Download Preparation
+    Client->>Server: GET_CHUNK_SIZE
+    Server-->>Client: Chunk Size (e.g., 10 kB)
+    
+    # File Download
+    Client->>Server: DOWNLOAD filename
+    loop Chunk Transfer
+        Server->>Client: Chunk with Sequence Number
+        Note over Client: Verify Checksum
+        alt Chunk Valid
+            Client->>Server: ACK: Sequence Number
+        else Chunk Corrupted
+            Client->>Server: No ACK (Timeout)
+        end
+    end
+    
+    Client->>Server: DONE filename
+    Server-->>Client: END transfer
+```
 ### Demo video
  ***coming soon***
