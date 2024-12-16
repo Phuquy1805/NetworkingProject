@@ -40,6 +40,33 @@ cd TCP
    python client.py
    ```
 Ghi các tên file client cần tải vào ```client/input.txt```
+### Comunication Diagram 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+
+    Client->>Server: LIST (Request file_list.txt)
+    Server-->>Client: Send file_list.txt
+
+    loop For each file in input.txt
+        Client->>Server: DOWNLOAD <filename> Chunk 1 (offset: 0)
+        Server-->>Client: Send Chunk 1
+
+        Client->>Server: DOWNLOAD <filename> Chunk 2 (offset: size/4)
+        Server-->>Client: Send Chunk 2
+
+        Client->>Server: DOWNLOAD <filename> Chunk 3 (offset: size/2)
+        Server-->>Client: Send Chunk 3
+
+        Client->>Server: DOWNLOAD <filename> Chunk 4 (offset: remaining bytes)
+        Server-->>Client: Send Chunk 4
+    end
+
+    Client->>Client: Merge all chunks
+    Client->>Client: Save complete file to downloads/
+
+```
 ### Demo video
 ***coming soon***
 ## Problem 2 : Using UDP to download files
