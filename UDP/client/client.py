@@ -9,6 +9,7 @@ SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000
 DOWNLOAD_DIR = "downloads"
 INPUT_FILE = "input.txt"
+FILE_LIST = "file_list.txt"
 
 # A set to avoid re-downloading files
 downloaded_files = set()
@@ -41,7 +42,7 @@ def fetch_file_list():
         files[filename] = int(size)
 
     # Save the file list to a local file
-    with open("file_list.txt", "w") as f:
+    with open(FILE_LIST, "w") as f:
         for file in files:
             f.write(f"{file} {files[file]}\n")
     return files
@@ -56,6 +57,21 @@ def read_input_file():
                 if filename:  # Skip blank lines
                     input_files.append(filename)
     return input_files
+
+def display_available_files(files):
+    """Display available files and their sizes."""
+    print("\n===== Available Files =====")
+    print(f"{'Filename':<20} Size (bytes)")
+    print("-" * 35)
+    
+    for filename, size in files.items():
+        # Format size with comma separators for readability
+        formatted_size = f"{size:,}"
+        print(f"{filename:<20} {formatted_size}")
+    
+    print("\n=== Total Files: {} ===".format(len(files)))
+    print("To download, add filenames to input.txt, one per line.")
+
 
 def download_file(filename, file_size):
     """Download the specified file from the server."""
@@ -116,10 +132,16 @@ def client_main():
     """Main function to control the client download process."""
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     server_files = fetch_file_list()
-
+    files_displayed = False
+    
+    
     while True:
         input_files = read_input_file()
-
+        
+        if not input_files and not files_displayed:
+            display_available_files(server_files)
+            files_displayed = True
+            
         for filename in input_files:
             if filename in server_files and filename not in downloaded_files:
                 print(f"Starting download for: {filename}")
@@ -132,4 +154,5 @@ if __name__ == "__main__":
     try:
         client_main()
     except KeyboardInterrupt:
+        os.remove(FILE_LIST)
         print("\nClient exited.")

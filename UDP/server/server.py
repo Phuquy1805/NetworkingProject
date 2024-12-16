@@ -2,20 +2,33 @@ import socket
 import os
 import threading
 import hashlib
-
+import random
 
 # Server configuration
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 8000
 FILE_DIR = "server_files"
 FILE_LIST = "file_list.txt"
-CHUNK_SIZE = 50 * 1024  # Chunk size of 50 KB
+CHUNK_SIZE = 10 * 1024  
 WINDOW_SIZE = 5          # Number of chunks that can be in flight simultaneously
 ACK_TIMEOUT = 5          # Timeout in seconds for waiting for ACKs before retransmission
+CORRUPTION_RATE = 0.01   # % of packets will be corrupted (for debug purposes)
 
 def calculate_checksum(data):
     """Calculate the MD5 checksum of the given data."""
     return hashlib.md5(data).hexdigest()
+
+def corrupt_packet(packet):
+    """Simulate packet corruption by randomly modifying a byte."""
+    if random.random() < CORRUPTION_RATE:
+        packet_list = bytearray(packet)
+        # Randomly choose a byte to modify
+        corrupt_index = random.randint(0, len(packet_list) - 1)
+        # Modify the byte
+        packet_list[corrupt_index] = (packet_list[corrupt_index] + 1) % 256
+        print(f"⚠️ Packet corrupted at index {corrupt_index}")
+        return bytes(packet_list)
+    return packet
 
 def update_file_list():
     """Update the list of files in FILE_DIR and save to FILE_LIST."""
@@ -50,11 +63,13 @@ def handle_download(server_socket, client_addr, filename):
     acked_chunks = set()
     window_start = 0
 
-
     def resend_chunk(seq_num):
         """Resend a specific chunk if it hasn't been acknowledged."""
         if seq_num in sent_chunks and seq_num not in acked_chunks:
-            server_socket.sendto(sent_chunks[seq_num], client_addr)
+            # Potentially corrupt the packet when resending
+            packet = sent_chunks[seq_num]
+            corrupted_packet = corrupt_packet(packet)
+            server_socket.sendto(corrupted_packet, client_addr)
             print(f"Resending chunk {seq_num}")
 
     def wait_for_ack():
@@ -92,8 +107,12 @@ def handle_download(server_socket, client_addr, filename):
                 chunk_data = file.read(CHUNK_SIZE)
                 checksum = calculate_checksum(chunk_data)
                 packet = f"{seq}|{checksum}|".encode() + chunk_data  # Create the packet
+                
+                # Potentially corrupt the packet
+                corrupted_packet = corrupt_packet(packet)
+                
                 sent_chunks[seq] = packet
-                server_socket.sendto(packet, client_addr)  # Send the packet
+                server_socket.sendto(corrupted_packet, client_addr)  # Send the potentially corrupted packet
 
         # Update the window_start to the next unacknowledged chunk
         while window_start in acked_chunks:
@@ -120,6 +139,8 @@ def server_main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Create a UDP socket
     server_socket.bind((SERVER_HOST, SERVER_PORT))  # Bind the socket to the host and port
     print(f"Server listening on {SERVER_HOST}:{SERVER_PORT}...")
+    if CORRUPTION_RATE > 0:
+        print(f"🚨 Packet Corruption Simulation Enabled ({CORRUPTION_RATE * 100}% corruption rate)")
 
     while True:
         try:
