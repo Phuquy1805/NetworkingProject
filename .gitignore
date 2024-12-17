@@ -1,3 +1,4 @@
+.DS_Store
 TCP/client/downloads/*
 TCP/client/file_list.txt
 TCP/server/server_files/*
