@@ -1,22 +1,22 @@
+import argparse
 import socket
 import threading
 import os
 import time
-from tqdm import tqdm  # Import tqdm for the progress bar
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 8000
+from tqdm import tqdm  
+
 DOWNLOAD_DIR = "downloads"
 INPUT_FILE = "input.txt"  # wanted files
 
 # A set to avoid redownload file
 downloaded_files = set()
 
-def fetch_file_list():
+def fetch_file_list(server_host, server_port):
     """
     Send a LIST command for server, server then gives the client the file_list.txt which will be parsed for filenames and their sizes
     """
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((SERVER_HOST, SERVER_PORT))
+    client.connect((server_host, server_port))
     client.sendall(b"LIST")  # LIST command
     
     # Client recieves file_list.txt
@@ -64,13 +64,13 @@ def display_available_files(files):
     print("\n=== Total Files: {} ===".format(len(files)))
     print("To download, add filenames to input.txt, one per line.")
 
-def download_chunk(filename, offset, chunk_size, part, total_parts):
+def download_chunk(filename, offset, chunk_size, part, total_parts, server_host, server_port):
     """
     Client sends a DOWNLOAD command with arguments : filename, chunksize, partNumber, totalPart
     Server will begins downloading the requested chunk(s)
     """
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((SERVER_HOST, SERVER_PORT))
+    client.connect((server_host, server_port))
     client.sendall(f"DOWNLOAD {filename} {offset} {chunk_size}".encode())
     
     # Create temporary part files
@@ -97,7 +97,7 @@ def merge_file(filename, total_parts):
             os.remove(part_path)  # deleted merged chunks
     print(f"File {filename} has been merged successfully.")
 
-def download_file(filename, file_size):
+def download_file(filename, file_size, server_host, server_port):
     """
     Split file into 4 chunks, with the last chunk holds the remaining bytes
     For example : 
@@ -116,7 +116,7 @@ def download_file(filename, file_size):
             chunk_size = file_size - offset
         part = i + 1
         # create thread to download chunk
-        t = threading.Thread(target=download_chunk, args=(filename, offset, chunk_size, part, 4))
+        t = threading.Thread(target=download_chunk, args=(filename, offset, chunk_size, part, 4, server_host, server_port))
         threads.append(t)
         t.start()
 
@@ -128,14 +128,14 @@ def download_file(filename, file_size):
     merge_file(filename, 4)
     print(f"Downloaded {filename} successfully!")
 
-def client_main():
+def client_main(server_host, server_port):
     """
     Main client loop: only download wanted files in INPUT_FILE.
     """
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     
     # get file list from the server (file_list.txt)
-    server_files = fetch_file_list()
+    server_files = fetch_file_list(server_host, server_port)
     files_displayed = False
     
     while True:
@@ -150,15 +150,19 @@ def client_main():
             # Only download available and not yet downloaded file
             if filename in server_files and filename not in downloaded_files:
                 print(f"Starting download for: {filename} ({server_files[filename]} bytes)")
-                download_file(filename, server_files[filename])
+                download_file(filename, server_files[filename], server_host, server_port)
                 downloaded_files.add(filename)
 
         # Wait 5s after checking INPUT_FILE for additional file(s)
         time.sleep(5)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="UDP Client")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
+    parser.add_argument("--port", type=int, default=8000, help="Server port")
+    args = parser.parse_args()
     try:
-        client_main()
+        client_main(args.host, args.port)
     except KeyboardInterrupt:
         os.remove("file_list.txt") # delete file_list.txt of client
         print("\nClient exited.")

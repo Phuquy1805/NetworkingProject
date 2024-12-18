@@ -1,9 +1,8 @@
+import argparse
 import socket
 import threading
 import os
-import tqdm
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 8000
+
 FILE_DIR = "server_files"
 FILE_LIST = "file_list.txt"
 
@@ -45,13 +44,13 @@ def update_file_list():
                 size = os.path.getsize(filepath)
                 f.write(f"{filename} {size}\n")
 
-def server_main():
+def server_main(server_host, server_port):
     update_file_list()
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((SERVER_HOST, SERVER_PORT))
+    server.bind((server_host, server_port))
     server.listen(5)
-    print(f"Server listening on {SERVER_HOST}:{SERVER_PORT}...")
+    print(f"Server listening on {server_host}:{server_port}...")
 
     while True:
         client_socket, addr = server.accept()
@@ -60,8 +59,12 @@ def server_main():
         client_thread.start()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="UDP Server")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
+    parser.add_argument("--port", type=int, default=8000, help="Server port")
+    args = parser.parse_args()
     try:
         os.makedirs(FILE_DIR, exist_ok=True)
-        server_main()
+        server_main(args.host, args.port)
     except KeyboardInterrupt:
         print("Server exited.")
