@@ -84,24 +84,11 @@ cd UDP
 * Trên máy server
   ```bash
   usage: server.py [-h] [--host HOST] [--port PORT]
-
-UDP Server 
-
-optional arguments:
-  -h, --help   show this help message and exit
-  --host HOST  Server IP address
-  --port PORT  Server port
   ```
+
 * Trên máy client 
   ```bash
   usage: client.py [-h] [--host HOST] [--port PORT]
-
-UDP Server
-
-optional arguments:
-  -h, --help   show this help message and exit
-  --host HOST  Server IP address
-  --port PORT  Server port
   ```
 Ghi các tên file client cần tải vào ```client/input.txt```
 ### Comunication Diagram 
