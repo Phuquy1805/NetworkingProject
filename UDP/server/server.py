@@ -12,7 +12,7 @@ FILE_LIST = "file_list.txt"
 CHUNK_SIZE = 10 * 1024  
 WINDOW_SIZE = 5          # Number of chunks that can be in flight simultaneously
 ACK_TIMEOUT = 5          # Timeout in seconds for waiting for ACKs before retransmission
-CORRUPTION_RATE = 0.01   # % of packets will be corrupted (for debug purposes)
+CORRUPTION_RATE = 0   # % of packets will be corrupted (for debug purposes)
 
 def calculate_checksum(data):
     """Calculate the MD5 checksum of the given data."""
@@ -26,7 +26,6 @@ def corrupt_packet(packet):
         corrupt_index = random.randint(0, len(packet_list) - 1)
         # Modify the byte
         packet_list[corrupt_index] = (packet_list[corrupt_index] + 1) % 256
-        print(f"⚠️ Packet corrupted at index {corrupt_index}")
         return bytes(packet_list)
     return packet
 
@@ -37,7 +36,7 @@ def update_file_list():
             filepath = os.path.join(FILE_DIR, filename)
             if os.path.isfile(filepath):
                 size = os.path.getsize(filepath)
-                f.write(f"{filename} {size}\n")  # Write filename and size to file
+                f.write(f"{filename} {size}\n")  
 
 def handle_get_chunk_size(server_socket, client_addr):
     """Send the current CHUNK_SIZE to the client."""
@@ -85,7 +84,7 @@ def handle_download(server_socket, client_addr, filename):
                     
                 elif ack.startswith(b"DONE"):
                     print(f"Client finished receiving {filename}.")
-                    break  # Stop waiting for more ACKs
+                    break  
             except socket.timeout:
                 # Resend unacknowledged chunks
                 for seq in range(window_start, min(window_start + WINDOW_SIZE, total_chunks)):
@@ -99,59 +98,63 @@ def handle_download(server_socket, client_addr, filename):
     while window_start < total_chunks:
         for seq in range(window_start, min(window_start + WINDOW_SIZE, total_chunks)):
             if seq in acked_chunks:
-                continue  # Skip already acknowledged chunks
+                continue  
 
             # Read and send the chunk
             with open(filepath, "rb") as file:
-                file.seek(seq * CHUNK_SIZE)  # Move to the correct chunk
+                file.seek(seq * CHUNK_SIZE)  
                 chunk_data = file.read(CHUNK_SIZE)
                 checksum = calculate_checksum(chunk_data)
-                packet = f"{seq}|{checksum}|".encode() + chunk_data  # Create the packet
+                packet = f"{seq}|{checksum}|".encode() + chunk_data 
                 
                 # Potentially corrupt the packet
                 corrupted_packet = corrupt_packet(packet)
                 
                 sent_chunks[seq] = packet
-                server_socket.sendto(corrupted_packet, client_addr)  # Send the potentially corrupted packet
+                server_socket.sendto(corrupted_packet, client_addr)  
 
         # Update the window_start to the next unacknowledged chunk
         while window_start in acked_chunks:
             window_start += 1
-
-    ack_thread.join()  # Wait for the ACK thread to finish
-    server_socket.sendto(b"END", client_addr)  # Signal the end of the transfer
+            
+    # Wait for the ACK thread to finish
+    ack_thread.join()  
+    
+    # Signal the end of the transfer
+    server_socket.sendto(b"END", client_addr)  
 
 def handle_client(server_socket, data, client_addr):
     """Handle incoming client requests."""
     command, *args = data.decode().split()
     if command == "LIST":
-        handle_list(server_socket, client_addr)  # Handle LIST command
+        handle_list(server_socket, client_addr)  
     elif command == "DOWNLOAD":
         filename = args[0]
-        handle_download(server_socket, client_addr, filename)  # Handle DOWNLOAD command
+        handle_download(server_socket, client_addr, filename)  
     elif command == "GET_CHUNK_SIZE":
-        handle_get_chunk_size(server_socket, client_addr)  # Handle GET_CHUNK_SIZE command
+        handle_get_chunk_size(server_socket, client_addr)  
 
 def server_main():
     """Main server loop to handle incoming connections."""
-    update_file_list()  # Update the file list at startup
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Create a UDP socket
-    server_socket.bind((SERVER_HOST, SERVER_PORT))  # Bind the socket to the host and port
+    update_file_list()  
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
+    server_socket.bind((SERVER_HOST, SERVER_PORT))  
     print(f"Server listening on {SERVER_HOST}:{SERVER_PORT}...")
+    
     if CORRUPTION_RATE > 0:
         print(f"🚨 Packet Corruption Simulation Enabled ({CORRUPTION_RATE * 100}% corruption rate)")
 
     while True:
         try:
-            data, client_addr = server_socket.recvfrom(2048)  # Receive data from clients
+            data, client_addr = server_socket.recvfrom(2048) 
             # Start a new thread to handle the client request
             threading.Thread(target=handle_client, args=(server_socket, data, client_addr), daemon=True).start()
         except socket.timeout:
             print("Waiting for client...")
 
 if __name__ == "__main__":
-    os.makedirs(FILE_DIR, exist_ok=True)  # Create the file directory if it doesn't exist
+    os.makedirs(FILE_DIR, exist_ok=True)  
     try:
-        server_main()  # Start the server
+        server_main()  
     except KeyboardInterrupt:
-        print("\nServer exited.")  # Handle server exit on Ctrl+C
+        print("\nServer exited.") 

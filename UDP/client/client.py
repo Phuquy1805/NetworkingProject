@@ -78,12 +78,6 @@ def download_file(filename, file_size):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client_socket.sendto(f"DOWNLOAD {filename}".encode(), (SERVER_HOST, SERVER_PORT))
 
-    # Fetch chunk size from server's end
-    global CHUNK_SIZE
-    CHUNK_SIZE = fetch_chunk_size()
-    print(f"Using chunk size: {CHUNK_SIZE} bytes")
-    
-    
     # Calculate total chunks based on file size and chunk size
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
     received_chunks = {}
@@ -132,8 +126,13 @@ def client_main():
     """Main function to control the client download process."""
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     server_files = fetch_file_list()
-    files_displayed = False
     
+    # Fetch chunk size from server's end
+    global CHUNK_SIZE
+    CHUNK_SIZE = fetch_chunk_size()
+    print(f"Using chunk size: {CHUNK_SIZE} bytes")
+    
+    files_displayed = False
     while True:
         input_files = read_input_file()
         
