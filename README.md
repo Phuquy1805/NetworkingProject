@@ -25,7 +25,7 @@ cd TCP
 ```
 
 * Tạo thư mục ```server/server_files/``` và add file mà client muốn tải vào đó
-* Di chuyển vào đường dẫn ```/server```
+
 
 
 
@@ -76,7 +76,7 @@ sequenceDiagram
 cd UDP
 ```
 * Tạo thư mục ```server/server_files/``` và add file mà client muốn tải vào đó
-* Di chuyển vào đường dẫn ```/server```
+
 
 
 
