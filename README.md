@@ -85,12 +85,12 @@ cd UDP
   ```bash
   usage: server.py [-h] [--host HOST] [--port PORT]
 
- UDP Server
+UDP Server
 
- optional arguments:
-   -h, --help   show this help message and exit
-   --host HOST  Server IP address
-   --port PORT  Server port
+optional arguments:
+  -h, --help   show this help message and exit
+  --host HOST  Server IP address
+  --port PORT  Server port
   ```
 * Trên máy client 
   ```bash
