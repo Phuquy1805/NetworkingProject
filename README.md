@@ -30,15 +30,14 @@ cd TCP
 
 
 * Trên máy server
-   ```bash
-   cd server
-   python server.py
-   ```
+  ```bash
+  python server.py [-h] [--host HOST] [--port PORT]
+  ```
+
 * Trên máy client 
-   ```bash
-   cd client
-   python client.py
-   ```
+  ```bash
+  python client.py [-h] [--host HOST] [--port PORT]
+  ```
 Ghi các tên file client cần tải vào ```client/input.txt```
 ### Comunication Diagram 
 ```mermaid
@@ -83,13 +82,12 @@ cd UDP
 
 * Trên máy server
   ```bash
-  cd server
-  python server.py
+  python server.py [-h] [--host HOST] [--port PORT]
   ```
+
 * Trên máy client 
   ```bash
-  cd client
-  python client.py
+  python client.py [-h] [--host HOST] [--port PORT]
   ```
 Ghi các tên file client cần tải vào ```client/input.txt```
 ### Comunication Diagram 
