@@ -109,7 +109,7 @@ sequenceDiagram
     # File Download
     Client->>Server: DOWNLOAD filename
     loop Chunk Transfer
-        Server->>Client: Chunk with Sequence Number & Checksum
+        Server->>Client: <sequence_number>|<checksum>|<chunk_data>
         Note over Client: Verify Checksum
         alt Chunk Valid
             Client->>Server: ACK: Sequence Number
