@@ -1,3 +1,4 @@
+import argparse
 import socket
 import os
 import threading
@@ -5,8 +6,6 @@ import hashlib
 import random
 
 # Server configuration
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 8000
 FILE_DIR = "server_files"
 FILE_LIST = "file_list.txt"
 CHUNK_SIZE = 10 * 1024  
@@ -134,12 +133,12 @@ def handle_client(server_socket, data, client_addr):
     elif command == "GET_CHUNK_SIZE":
         handle_get_chunk_size(server_socket, client_addr)  
 
-def server_main():
+def server_main(server_host, server_port):
     """Main server loop to handle incoming connections."""
     update_file_list()  
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
-    server_socket.bind((SERVER_HOST, SERVER_PORT))  
-    print(f"Server listening on {SERVER_HOST}:{SERVER_PORT}...")
+    server_socket.bind((server_host, server_port))  
+    print(f"Server listening on {server_host}:{server_port}...")
     
     if CORRUPTION_RATE > 0:
         print(f"🚨 Packet Corruption Simulation Enabled ({CORRUPTION_RATE * 100}% corruption rate)")
@@ -153,8 +152,14 @@ def server_main():
             print("Waiting for client...")
 
 if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description="UDP Server")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
+    parser.add_argument("--port", type=int, default=8000, help="Server port")
+    args = parser.parse_args()
+
     os.makedirs(FILE_DIR, exist_ok=True)  
     try:
-        server_main()  
+        server_main(args.host, args.port)  
     except KeyboardInterrupt:
         print("\nServer exited.") 

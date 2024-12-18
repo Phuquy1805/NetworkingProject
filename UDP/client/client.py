@@ -1,3 +1,4 @@
+import argparse
 import socket
 import os
 import hashlib
@@ -5,8 +6,6 @@ import threading
 import time
 
 # Server configuration
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 8000
 DOWNLOAD_DIR = "downloads"
 INPUT_FILE = "input.txt"
 FILE_LIST = "file_list.txt"
@@ -18,19 +17,19 @@ def calculate_checksum(data):
     """Calculate and return the MD5 checksum of the given data."""
     return hashlib.md5(data).hexdigest()
 
-def fetch_chunk_size():
+def fetch_chunk_size(server_host, server_port):
     """Send a request to the server for the chunk size for a given filename."""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client_socket.sendto(f"GET_CHUNK_SIZE".encode(), (SERVER_HOST, SERVER_PORT))
+    client_socket.sendto(f"GET_CHUNK_SIZE".encode(), (server_host, server_port))
 
     # Receive the chunk size from the server
     chunk_size_data, _ = client_socket.recvfrom(1024)
     return int(chunk_size_data.decode())
 
-def fetch_file_list():
+def fetch_file_list(server_host, server_port):
     """Request and receive the list of available files from the server."""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client_socket.sendto(b"LIST", (SERVER_HOST, SERVER_PORT))
+    client_socket.sendto(b"LIST", (server_host, server_port))
 
     # Receive the file list from the server
     file_list_data, _ = client_socket.recvfrom(4096)
@@ -73,10 +72,10 @@ def display_available_files(files):
     print("To download, add filenames to input.txt, one per line.")
 
 
-def download_file(filename, file_size):
+def download_file(filename, file_size, server_host, server_port):
     """Download the specified file from the server."""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    client_socket.sendto(f"DOWNLOAD {filename}".encode(), (SERVER_HOST, SERVER_PORT))
+    client_socket.sendto(f"DOWNLOAD {filename}".encode(), (server_host, server_port))
 
     # Calculate total chunks based on file size and chunk size
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
@@ -99,7 +98,7 @@ def download_file(filename, file_size):
                 # Verify checksum before storing the chunk
                 if calculate_checksum(data) == checksum:
                     received_chunks[seq] = data
-                    client_socket.sendto(f"ACK:{seq}".encode(), (SERVER_HOST, SERVER_PORT))
+                    client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
 
                 else:
                     print(f"Corrupted chunk {seq}, requesting retransmission...")
@@ -114,7 +113,7 @@ def download_file(filename, file_size):
         time.sleep(0.1)
     
     # Notify the server that the download is complete
-    client_socket.sendto(f"DONE {filename}".encode(), (SERVER_HOST, SERVER_PORT))
+    client_socket.sendto(f"DONE {filename}".encode(), (server_host, server_port))
 
     # Write the received chunks to a file
     with open(os.path.join(DOWNLOAD_DIR, filename), "wb") as f:
@@ -122,14 +121,14 @@ def download_file(filename, file_size):
             f.write(received_chunks[seq])
     
 
-def client_main():
+def client_main(server_host, server_port):
     """Main function to control the client download process."""
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    server_files = fetch_file_list()
+    server_files = fetch_file_list(server_host, server_port)
     
     # Fetch chunk size from server's end
     global CHUNK_SIZE
-    CHUNK_SIZE = fetch_chunk_size()
+    CHUNK_SIZE = fetch_chunk_size(server_host, server_port)
     print(f"Using chunk size: {CHUNK_SIZE} bytes")
     
     files_displayed = False
@@ -143,14 +142,18 @@ def client_main():
         for filename in input_files:
             if filename in server_files and filename not in downloaded_files:
                 print(f"Starting download for: {filename}")
-                download_file(filename, server_files[filename])
+                download_file(filename, server_files[filename], server_host, server_port)
                 downloaded_files.add(filename)
         # Wait 5 seconds after checking INPUT_FILE for additional files
         time.sleep(5)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="UDP Client")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
+    parser.add_argument("--port", type=int, default=8000, help="Server port")
+    args = parser.parse_args()
     try:
-        client_main()
+        client_main(args.host, args.port)
     except KeyboardInterrupt:
         os.remove(FILE_LIST)
         print("\nClient exited.")
