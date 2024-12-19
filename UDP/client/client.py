@@ -9,7 +9,16 @@ import time
 DOWNLOAD_DIR = "downloads"
 INPUT_FILE = "input.txt"
 FILE_LIST = "file_list.txt"
-
+socket_art = """
+     .d8888b.                    888               888    
+    d88P  Y88b                   888               888    
+    Y88b.                        888               888    
+     "Y888b.    .d88b.   .d8888b 888  888  .d88b 888888 
+        "Y88b. d88""88b d88P"    888 .88P d8P  Y8b 888    
+          "888 888  888 888      888888K  88888888 888    
+    Y88b  d88P Y88..88P Y88b.    888 "88b Y8b.     Y88b.  
+     "Y8888P"   "Y88P"   "Y8888P 888  888  "Y8888  "Y888 
+     """
 # A set to avoid re-downloading files
 downloaded_files = set()
 
@@ -59,6 +68,7 @@ def read_input_file():
 
 def display_available_files(files):
     """Display available files and their sizes."""
+    
     print("\n===== Available Files =====")
     print(f"{'Filename':<20} Size (bytes)")
     print("-" * 35)
@@ -87,7 +97,7 @@ def download_file(filename, file_size, server_host, server_port):
         while True:
             packet, _ = client_socket.recvfrom(65535)
             if packet == b"END":
-                print(f"Downloaded {filename} successfully!")
+                print(f"[+] Downloaded {filename} successfully!")
                 break
 
             try:
@@ -101,7 +111,7 @@ def download_file(filename, file_size, server_host, server_port):
                     client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
 
                 else:
-                    print(f"Corrupted chunk {seq}, requesting retransmission...")
+                    print(f"[-] Corrupted chunk {seq}, requesting retransmission...")
             except Exception as e:
                 print(f"Error processing packet: {e}")
 
@@ -129,7 +139,7 @@ def client_main(server_host, server_port):
     # Fetch chunk size from server's end
     global CHUNK_SIZE
     CHUNK_SIZE = fetch_chunk_size(server_host, server_port)
-    print(f"Using chunk size: {CHUNK_SIZE} bytes")
+    print(f"[!] Using chunk size: {CHUNK_SIZE} bytes")
     
     files_displayed = False
     while True:
@@ -152,6 +162,7 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
     parser.add_argument("--port", type=int, default=8000, help="Server port")
     args = parser.parse_args()
+    print(socket_art)
     try:
         client_main(args.host, args.port)
     except KeyboardInterrupt:

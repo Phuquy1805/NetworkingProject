@@ -7,7 +7,16 @@ from tqdm import tqdm
 
 DOWNLOAD_DIR = "downloads"
 INPUT_FILE = "input.txt"  # wanted files
-
+socket_art = """
+     .d8888b.                    888               888    
+    d88P  Y88b                   888               888    
+    Y88b.                        888               888    
+     "Y888b.    .d88b.   .d8888b 888  888  .d88b 888888 
+        "Y88b. d88""88b d88P"    888 .88P d8P  Y8b 888    
+          "888 888  888 888      888888K  88888888 888    
+    Y88b  d88P Y88..88P Y88b.    888 "88b Y8b.     Y88b.  
+     "Y8888P"   "Y88P"   "Y8888P 888  888  "Y8888  "Y888 
+     """
 # A set to avoid redownload file
 downloaded_files = set()
 
@@ -126,7 +135,7 @@ def download_file(filename, file_size, server_host, server_port):
     
     # Merge chunks into completed file
     merge_file(filename, 4)
-    print(f"Downloaded {filename} successfully!")
+    print(f"[+] Downloaded {filename} successfully!")
 
 def client_main(server_host, server_port):
     """
@@ -149,7 +158,7 @@ def client_main(server_host, server_port):
         for filename in input_files:
             # Only download available and not yet downloaded file
             if filename in server_files and filename not in downloaded_files:
-                print(f"Starting download for: {filename} ({server_files[filename]} bytes)")
+                print(f"[!] Starting download for: {filename} ({server_files[filename]} bytes)")
                 download_file(filename, server_files[filename], server_host, server_port)
                 downloaded_files.add(filename)
 
@@ -161,6 +170,7 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
     parser.add_argument("--port", type=int, default=8000, help="Server port")
     args = parser.parse_args()
+    print(socket_art)
     try:
         client_main(args.host, args.port)
     except KeyboardInterrupt:
