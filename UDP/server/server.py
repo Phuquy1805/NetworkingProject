@@ -11,15 +11,17 @@ FILE_LIST = "file_list.txt"
 CHUNK_SIZE = 10 * 1024  
 WINDOW_SIZE = 5          # Number of chunks that can be in flight simultaneously
 ACK_TIMEOUT = 5          # Timeout in seconds for waiting for ACKs before retransmission
-CORRUPTION_RATE = 0   # % of packets will be corrupted (for debug purposes)
 
 def calculate_checksum(data):
     """Calculate the MD5 checksum of the given data."""
     return hashlib.md5(data).hexdigest()
 
-def corrupt_packet(packet):
+def corrupt_packet(packet, corruption_rate):
     """Simulate packet corruption by randomly modifying a byte."""
-    if random.random() < CORRUPTION_RATE:
+    if corruption_rate == 0:
+        return packet
+    
+    if random.random() < corruption_rate:
         packet_list = bytearray(packet)
         # Randomly choose a byte to modify
         corrupt_index = random.randint(0, len(packet_list) - 1)
@@ -46,7 +48,7 @@ def handle_list(server_socket, client_addr):
     with open(FILE_LIST, "rb") as f:
         server_socket.sendto(f.read(), client_addr)
 
-def handle_download(server_socket, client_addr, filename):
+def handle_download(server_socket, client_addr, filename, corruption_rate):
     """Handle file download request from the client."""
     filepath = os.path.join(FILE_DIR, filename)
     if not os.path.exists(filepath):
@@ -55,7 +57,7 @@ def handle_download(server_socket, client_addr, filename):
 
     file_size = os.path.getsize(filepath)
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
-    print(f"Starting download of {filename}, Size: {file_size} bytes, Chunks: {total_chunks}")
+    print(f"[+] Starting download of {filename}, Size: {file_size} bytes, Chunks: {total_chunks}")
 
     sent_chunks = {}
     acked_chunks = set()
@@ -66,13 +68,13 @@ def handle_download(server_socket, client_addr, filename):
         if seq_num in sent_chunks and seq_num not in acked_chunks:
             # Potentially corrupt the packet when resending
             packet = sent_chunks[seq_num]
-            corrupted_packet = corrupt_packet(packet)
+            corrupted_packet = corrupt_packet(packet, corruption_rate)
             server_socket.sendto(corrupted_packet, client_addr)
-            print(f"Resending chunk {seq_num}")
+            print(f"[-] Resending chunk {seq_num}")
 
     def wait_for_ack():
         """Wait for ACKs from the client and update the loading bar."""
-        while len(acked_chunks) < total_chunks:
+        while True:
             try:
                 server_socket.settimeout(ACK_TIMEOUT)
                 ack, _ = server_socket.recvfrom(1024)
@@ -81,8 +83,8 @@ def handle_download(server_socket, client_addr, filename):
                     seq_num = int(ack.split(b":")[1])
                     acked_chunks.add(seq_num)
                     
-                elif ack.startswith(b"DONE"):
-                    print(f"Client finished receiving {filename}.")
+                elif ack.startswith(b"DONE") or len(acked_chunks) < total_chunks:
+                    print(f"[+] Client finished receiving {filename}.")
                     break  
             except socket.timeout:
                 # Resend unacknowledged chunks
@@ -107,7 +109,7 @@ def handle_download(server_socket, client_addr, filename):
                 packet = f"{seq}|{checksum}|".encode() + chunk_data 
                 
                 # Potentially corrupt the packet
-                corrupted_packet = corrupt_packet(packet)
+                corrupted_packet = corrupt_packet(packet, corruption_rate)
                 
                 sent_chunks[seq] = packet
                 server_socket.sendto(corrupted_packet, client_addr)  
@@ -122,44 +124,57 @@ def handle_download(server_socket, client_addr, filename):
     # Signal the end of the transfer
     server_socket.sendto(b"END", client_addr)  
 
-def handle_client(server_socket, data, client_addr):
+def handle_client(server_socket, data, client_addr, corruption_rate):
     """Handle incoming client requests."""
     command, *args = data.decode().split()
     if command == "LIST":
-        handle_list(server_socket, client_addr)  
+        handle_list(server_socket, client_addr)
+        print("[!] A client requested the FILE_LIST...")  
     elif command == "DOWNLOAD":
         filename = args[0]
-        handle_download(server_socket, client_addr, filename)  
+        handle_download(server_socket, client_addr, filename, corruption_rate)  
     elif command == "GET_CHUNK_SIZE":
         handle_get_chunk_size(server_socket, client_addr)  
 
-def server_main(server_host, server_port):
+def server_main(server_host, server_port, corruption_rate):
     """Main server loop to handle incoming connections."""
     update_file_list()  
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
     server_socket.bind((server_host, server_port))  
     print(f"Server listening on {server_host}:{server_port}...")
     
-    if CORRUPTION_RATE > 0:
-        print(f"🚨 Packet Corruption Simulation Enabled ({CORRUPTION_RATE * 100}% corruption rate)")
+    if corruption_rate > 0:
+        print(f"[!] Packet Corruption Simulation Enabled ({corruption_rate * 100}% corruption rate)")
 
     while True:
         try:
             data, client_addr = server_socket.recvfrom(2048) 
             # Start a new thread to handle the client request
-            threading.Thread(target=handle_client, args=(server_socket, data, client_addr), daemon=True).start()
+            threading.Thread(target=handle_client, args=(server_socket, data, client_addr, corruption_rate), daemon=True).start()
         except socket.timeout:
             print("Waiting for client...")
 
+def validate_loss_rate(value):
+    """Validate that the corruption rate is between 0 and 1."""
+    try:
+        float_value = float(value)
+        if float_value < 0 or float_value > 1:
+            raise argparse.ArgumentTypeError(f"Corruption rate must be between 0 and 1, got {float_value}")
+        return float_value
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Invalid corruption rate value: {value}")
+
 if __name__ == "__main__":
-    
     parser = argparse.ArgumentParser(description="UDP Server")
     parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
     parser.add_argument("--port", type=int, default=8000, help="Server port")
+    parser.add_argument("--loss", type=validate_loss_rate, default=0.0,
+                      help="Packet corruption rate (between 0 and 1)")
+    
     args = parser.parse_args()
 
     os.makedirs(FILE_DIR, exist_ok=True)  
     try:
-        server_main(args.host, args.port)  
+        server_main(args.host, args.port, args.loss)  
     except KeyboardInterrupt:
-        print("\nServer exited.") 
+        print("\nServer exited.")
