@@ -10,7 +10,7 @@ FILE_DIR = "server_files"
 FILE_LIST = "file_list.txt"
 CHUNK_SIZE = 10 * 1024  
 WINDOW_SIZE = 5          # Number of chunks that can be in flight simultaneously
-ACK_TIMEOUT = 5          # Timeout in seconds for waiting for ACKs before retransmission
+ACK_TIMEOUT = 7         # Timeout in seconds for waiting for ACKs before retransmission
 
 def calculate_checksum(data):
     """Calculate the MD5 checksum of the given data."""
@@ -79,7 +79,7 @@ def handle_download(server_socket, client_addr, filename, corruption_rate):
                 server_socket.settimeout(ACK_TIMEOUT)
                 ack, _ = server_socket.recvfrom(1024)
                 
-                if ack.startswith(b"ACK:"):    
+                if ack.startswith(b"ACK:"):
                     seq_num = int(ack.split(b":")[1])
                     acked_chunks.add(seq_num)
                     
