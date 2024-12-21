@@ -145,7 +145,7 @@ def download_file(filename, file_size, server_host, server_port):
 
     # Wait until all chunks are received
     while len(received_chunks) < total_chunks:
-        time.sleep(0.1)
+        time.sleep(0.01)
     
     # Notify the server that the download is complete
     client_socket.sendto(f"DONE {filename}".encode(), (server_host, server_port))
