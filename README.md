@@ -59,10 +59,11 @@ sequenceDiagram
 
         Client->>Server: DOWNLOAD <filename> Chunk 4 (offset: remaining bytes)
         Server-->>Client: Send Chunk 4
-    end
+    
 
-    Client->>Client: Merge all chunks
-    Client->>Client: Save complete file to downloads/
+        Client->>Client: Merge all chunks
+        Client->>Client: Save complete file to downloads/
+  end
 
 ```
 ### Demo video
@@ -104,15 +105,17 @@ sequenceDiagram
     Server-->>Client: Chunk Size (e.g., 10 kB)
     
     # File Download
-    Client->>Server: DOWNLOAD filename
-    loop Chunk Transfer
-        Server->>Client: <sequence_number>|<checksum>|<chunk_data>
-        Note over Client: Verify Checksum
-        alt Chunk Valid
-            Client->>Server: ACK: Sequence Number
-        else Chunk Corrupted
-            Client->>Server: No ACK (Timeout)
-        end
+    loop For each file in input.txt
+        Client->>Server: DOWNLOAD filename
+        loop Chunk Transfer
+             Server->>Client: <sequence_number>|<checksum>|<chunk_data>
+             Note over Client: Verify Checksum
+             alt Chunk Valid
+                 Client->>Server: ACK: Sequence Number
+             else Chunk Corrupted
+                 Client->>Server: No ACK (Timeout)
+             end
+         end
     end
     
     Server-->>Client: END 
