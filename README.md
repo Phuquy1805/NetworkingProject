@@ -5,9 +5,9 @@
 
 ## Bộ môn Mạng máy tính (Computer Networking)
 ### Members :
+* Lê Nhật Khôi - 23127004
 * Nguyễn Trần Phú Quý - 23127113
 * Nguyễn Hải Đăng - 23127165
-* Lê Nhật Khôi - 23127004
 
 ### Content : 
 
