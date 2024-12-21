@@ -192,7 +192,7 @@ def client_main(server_host, server_port):
         time.sleep(5)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="UDP Client")
+    parser = argparse.ArgumentParser(description="TCP Client")
     parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
     parser.add_argument("--port", type=int, default=8000, help="Server port")
     args = parser.parse_args()

@@ -59,7 +59,7 @@ def server_main(server_host, server_port):
         client_thread.start()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="UDP Server")
+    parser = argparse.ArgumentParser(description="TCP Server")
     parser.add_argument("--host", type=str, default="127.0.0.1", help="Server IP address")
     parser.add_argument("--port", type=int, default=8000, help="Server port")
     args = parser.parse_args()
@@ -67,4 +67,4 @@ if __name__ == "__main__":
         os.makedirs(FILE_DIR, exist_ok=True)
         server_main(args.host, args.port)
     except KeyboardInterrupt:
-        print("Server exited.")
+        print("\nServer exited.")
