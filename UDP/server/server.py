@@ -129,12 +129,13 @@ def handle_client(server_socket, data, client_addr, corruption_rate):
     command, *args = data.decode().split()
     if command == "LIST":
         handle_list(server_socket, client_addr)
-        print("[!] A client requested the FILE_LIST...")  
+        print("[!] Client requested FILE_LIST...")  
     elif command == "DOWNLOAD":
         filename = args[0]
         handle_download(server_socket, client_addr, filename, corruption_rate)  
     elif command == "GET_CHUNK_SIZE":
-        handle_get_chunk_size(server_socket, client_addr)  
+        handle_get_chunk_size(server_socket, client_addr)
+        print("[!] Client requested CHUNK_SIZE...")
 
 def server_main(server_host, server_port, corruption_rate):
     """Main server loop to handle incoming connections."""
@@ -150,7 +151,7 @@ def server_main(server_host, server_port, corruption_rate):
         try:
             data, client_addr = server_socket.recvfrom(2048) 
             # Start a new thread to handle the client request
-            threading.Thread(target=handle_client, args=(server_socket, data, client_addr, corruption_rate), daemon=True).start()
+            handle_client(server_socket, data, client_addr, corruption_rate)
         except socket.timeout:
             print("Waiting for client...")
 
