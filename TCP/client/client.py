@@ -8,14 +8,19 @@ from tqdm import tqdm
 DOWNLOAD_DIR = "downloads"
 INPUT_FILE = "input.txt"  # wanted files
 socket_art = """
-     .d8888b.                    888               888    
-    d88P  Y88b                   888               888    
-    Y88b.                        888               888    
-     "Y888b.    .d88b.   .d8888b 888  888  .d88b 888888 
-        "Y88b. d88""88b d88P"    888 .88P d8P  Y8b 888    
-          "888 888  888 888      888888K  88888888 888    
-    Y88b  d88P Y88..88P Y88b.    888 "88b Y8b.     Y88b.  
-     "Y8888P"   "Y88P"   "Y8888P 888  888  "Y8888  "Y888 
+    ████████╗ ██████╗██████╗     
+    ╚══██╔══╝██╔════╝██╔══██╗    
+       ██║   ██║     ██████╔╝    
+       ██║   ██║     ██╔═══╝     
+       ██║   ╚██████╗██║         
+       ╚═╝    ╚═════╝╚═╝         
+
+    ███████╗ ██████╗  ██████╗██╗  ██╗███████╗████████╗
+    ██╔════╝██╔═══██╗██╔════╝██║ ██╔╝██╔════╝╚══██╔══╝
+    ███████╗██║   ██║██║     █████╔╝ █████╗     ██║   
+    ╚════██║██║   ██║██║     ██╔═██╗ ██╔══╝     ██║   
+    ███████║╚██████╔╝╚██████╗██║  ██╗███████╗   ██║   
+    ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝ 
      """
 # A set to avoid redownload file
 downloaded_files = set()
@@ -60,18 +65,39 @@ def read_input_file():
     return input_files
  
 def display_available_files(files):
-    """Display available files and their sizes."""
-    print("\n===== Available Files =====")
-    print(f"{'Filename':<20} Size (bytes)")
-    print("-" * 35)
+    """Display available files and their sizes with clean, minimal formatting."""
     
-    for filename, size in files.items():
-        # Format size with comma separators for readability
-        formatted_size = f"{size:,}"
-        print(f"{filename:<20} {formatted_size}")
+    def format_size(size_in_bytes):
+        """Convert bytes to human readable format."""
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size_in_bytes < 1024:
+                return f"{size_in_bytes:.1f} {unit}"
+            size_in_bytes /= 1024
+        return f"{size_in_bytes:.1f} TB"
     
-    print("\n=== Total Files: {} ===".format(len(files)))
-    print("To download, add filenames to input.txt, one per line.")
+    # Colors (can be easily removed if not needed)
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+
+    # Header
+    print(f"\n{BOLD}Available Files{RESET}")
+    print("-" * 45)
+    print(f"{BOLD}{'Filename':<30} {'Size':>12}{RESET}")
+    print("-" * 45)
+    
+    # File listings
+    for filename, size in sorted(files.items()):
+        # Truncate filename if too long
+        display_filename = filename if len(filename) <= 27 else filename[:27] + "..."
+        human_size = format_size(size)
+        print(f"{display_filename:<30} {human_size:>12}")
+    
+    # Footer
+    print("-" * 45)
+    print(f"{BOLD}Total Files: {len(files)}{RESET}")
+    print(f"\nTo download: Add filenames to input.txt, one per line.\n")
 
 def download_chunk(filename, offset, chunk_size, part, total_parts, server_host, server_port):
     """
@@ -157,7 +183,7 @@ def client_main(server_host, server_port):
         
         for filename in input_files:
             # Only download available and not yet downloaded file
-            if filename in server_files and filename not in downloaded_files:
+            if filename in server_files and filename not in downloaded_files and not os.path.exists(os.path.join(DOWNLOAD_DIR, filename)):
                 print(f"[!] Starting download for: {filename} ({server_files[filename]} bytes)")
                 download_file(filename, server_files[filename], server_host, server_port)
                 downloaded_files.add(filename)
