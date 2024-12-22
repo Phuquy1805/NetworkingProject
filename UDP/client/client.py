@@ -117,7 +117,7 @@ def download_file(filename, file_size, server_host, server_port):
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
     received_chunks = {}
     
-    with tqdm(total=file_size, unit="B", unit_scale=True, desc=filename, ncols=80) as pbar:
+    with tqdm(total=total_chunks, unit="B", unit_scale=True, desc=filename, ncols=80) as pbar:
         def receive_chunks():
             """Receive file chunks from the server and send ACKs."""
             while True:
@@ -134,7 +134,7 @@ def download_file(filename, file_size, server_host, server_port):
                     # Verify checksum before storing the chunk
                     if calculate_checksum(data) == checksum:
                         if seq not in received_chunks:  # Update progress only for new chunks
-                            pbar.update(len(data))
+                            pbar.update(1)
                         received_chunks[seq] = data
                         client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
 
