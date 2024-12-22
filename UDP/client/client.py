@@ -4,6 +4,7 @@ import os
 import hashlib
 import threading
 import time
+from tqdm import tqdm 
 
 # Server configuration
 DOWNLOAD_DIR = "downloads"
@@ -116,29 +117,31 @@ def download_file(filename, file_size, server_host, server_port):
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
     received_chunks = {}
     
-    
-    def receive_chunks():
-        """Receive file chunks from the server and send ACKs."""
-        while True:
-            packet, _ = client_socket.recvfrom(65535)
-            if packet == b"END":
-                print(f"[+] Downloaded {filename} successfully!")
-                break
+    with tqdm(total=file_size, unit="B", unit_scale=True, desc=filename, ncols=80) as pbar:
+        def receive_chunks():
+            """Receive file chunks from the server and send ACKs."""
+            while True:
+                packet, _ = client_socket.recvfrom(65535)
+                if packet == b"END":
+                    print(f"[+] Downloaded {filename} successfully!")
+                    break
 
-            try:
-                seq, checksum, data = packet.split(b"|", 2)
-                seq = int(seq.decode())
-                checksum = checksum.decode()
+                try:
+                    seq, checksum, data = packet.split(b"|", 2)
+                    seq = int(seq.decode())
+                    checksum = checksum.decode()
 
-                # Verify checksum before storing the chunk
-                if calculate_checksum(data) == checksum:
-                    received_chunks[seq] = data
-                    client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
+                    # Verify checksum before storing the chunk
+                    if calculate_checksum(data) == checksum:
+                        if seq not in received_chunks:  # Update progress only for new chunks
+                            pbar.update(len(data))
+                        received_chunks[seq] = data
+                        client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
 
-                else:
-                    print(f"[-] Corrupted chunk {seq}, requesting retransmission...")
-            except Exception as e:
-                print(f"Error processing packet: {e}")
+                    else:
+                        print(f"[-] Corrupted chunk {seq}, requesting retransmission...")
+                except Exception as e:
+                    print(f"Error processing packet: {e}")
 
     # Start a thread to receive chunks while main thread handles flow control
     threading.Thread(target=receive_chunks, daemon=True).start()
