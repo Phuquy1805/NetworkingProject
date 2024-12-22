@@ -4,7 +4,6 @@ import os
 import hashlib
 import threading
 import time
-import sys
 
 
 # Server configuration
@@ -29,23 +28,9 @@ socket_art = """
 # A set to avoid re-downloading files
 downloaded_files = set()
 
-def format_size(size_in_bytes):
-    """Convert bytes to human readable format."""
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size_in_bytes < 1024:
-            return f"{size_in_bytes:.1f} {unit}"
-        size_in_bytes /= 1024
-    return f"{size_in_bytes:.1f} TB"
-
 def calculate_checksum(data):
     """Calculate and return the MD5 checksum of the given data."""
     return hashlib.md5(data).hexdigest()
-
-def create_progress_bar(progress, width=50):
-    """Create a progress bar with percentage and transfer speed."""
-    filled = int(width * progress)
-    bar = '█' * filled + '░' * (width - filled)
-    return f'[{bar}] {progress:.1f}%'
 
 def fetch_chunk_size(server_host, server_port):
     """Send a request to the server for the chunk size for a given filename."""
@@ -90,6 +75,14 @@ def read_input_file():
 def display_available_files(files):
     """Display available files and their sizes with clean, minimal formatting."""
     
+    def format_size(size_in_bytes):
+        """Convert bytes to human readable format."""
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size_in_bytes < 1024:
+                return f"{size_in_bytes:.1f} {unit}"
+            size_in_bytes /= 1024
+        return f"{size_in_bytes:.1f} TB"
+    
     # Colors (can be easily removed if not needed)
     BLUE = '\033[94m'
     GREEN = '\033[92m'
@@ -114,6 +107,7 @@ def display_available_files(files):
     print(f"{BOLD}Total Files: {len(files)}{RESET}")
     print(f"\nTo download: Add filenames to input.txt, one per line.\n")
 
+
 def download_file(filename, file_size, server_host, server_port):
     """Download the specified file from the server."""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -122,18 +116,14 @@ def download_file(filename, file_size, server_host, server_port):
     # Calculate total chunks based on file size and chunk size
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
     received_chunks = {}
-    start_time = time.time()
-    last_update_time = start_time
-    last_bytes_received = 0
+    progress_intervals = [25, 50, 75, 100]  # Define percentage milestones
+    progress_reported = set()  # Keep track of reported milestones
     
     def receive_chunks():
         """Receive file chunks from the server and send ACKs."""
-        nonlocal last_update_time, last_bytes_received
-        
         while True:
             packet, _ = client_socket.recvfrom(65535)
             if packet == b"END":
-                sys.stdout.write('\n')  # Move to next line after progress bar
                 print(f"[+] Downloaded {filename} successfully!")
                 break
 
@@ -146,27 +136,17 @@ def download_file(filename, file_size, server_host, server_port):
                 if calculate_checksum(data) == checksum:
                     received_chunks[seq] = data
                     client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
-                    
-                    # Calculate progress and speed
-                    current_time = time.time()
-                    bytes_received = len(received_chunks) * CHUNK_SIZE
                     progress = (len(received_chunks) / total_chunks) * 100
-                    
-                    # Update progress bar every 0.5 seconds
-                    if current_time - last_update_time >= 0.5:
-                        speed = (bytes_received - last_bytes_received) / (current_time - last_update_time)
-                        progress_bar = create_progress_bar(progress)
-                        speed_str = f"{format_size(speed)}/s"
-                        status = f"\r{filename}: {progress_bar} {speed_str}"
-                        sys.stdout.write(status)
-                        sys.stdout.flush()
-                        
-                        last_update_time = current_time
-                        last_bytes_received = bytes_received
+
+                    # Print milestones
+                    for milestone in progress_intervals:
+                        if progress >= milestone and milestone not in progress_reported:
+                            print(f"[{filename}] {milestone}% completed")
+                            progress_reported.add(milestone)
                 else:
-                    print(f"\n[-] Corrupted chunk {seq}, requesting retransmission...")
+                    print(f"[-] Corrupted chunk {seq}, requesting retransmission...")
             except Exception as e:
-                print(f"\nError processing packet: {e}")
+                print(f"Error processing packet: {e}")
 
     # Start a thread to receive chunks while main thread handles flow control
     threading.Thread(target=receive_chunks, daemon=True).start()
@@ -182,6 +162,7 @@ def download_file(filename, file_size, server_host, server_port):
     with open(os.path.join(DOWNLOAD_DIR, filename), "wb") as f:
         for seq in range(total_chunks):
             f.write(received_chunks[seq])
+    
 
 def client_main(server_host, server_port):
     """Main function to control the client download process."""
