@@ -4,7 +4,7 @@ import os
 import hashlib
 import threading
 import time
-from tqdm import tqdm 
+
 
 # Server configuration
 DOWNLOAD_DIR = "downloads"
@@ -116,32 +116,37 @@ def download_file(filename, file_size, server_host, server_port):
     # Calculate total chunks based on file size and chunk size
     total_chunks = (file_size + CHUNK_SIZE - 1) // CHUNK_SIZE
     received_chunks = {}
+    progress_intervals = [25, 50, 75, 100]  # Define percentage milestones
+    progress_reported = set()  # Keep track of reported milestones
     
-    with tqdm(total=total_chunks, unit="B", unit_scale=True, desc=filename, ncols=80) as pbar:
-        def receive_chunks():
-            """Receive file chunks from the server and send ACKs."""
-            while True:
-                packet, _ = client_socket.recvfrom(65535)
-                if packet == b"END":
-                    print(f"[+] Downloaded {filename} successfully!")
-                    break
+    def receive_chunks():
+        """Receive file chunks from the server and send ACKs."""
+        while True:
+            packet, _ = client_socket.recvfrom(65535)
+            if packet == b"END":
+                print(f"[+] Downloaded {filename} successfully!")
+                break
 
-                try:
-                    seq, checksum, data = packet.split(b"|", 2)
-                    seq = int(seq.decode())
-                    checksum = checksum.decode()
+            try:
+                seq, checksum, data = packet.split(b"|", 2)
+                seq = int(seq.decode())
+                checksum = checksum.decode()
 
-                    # Verify checksum before storing the chunk
-                    if calculate_checksum(data) == checksum:
-                        if seq not in received_chunks:  # Update progress only for new chunks
-                            pbar.update(1)
-                        received_chunks[seq] = data
-                        client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
+                # Verify checksum before storing the chunk
+                if calculate_checksum(data) == checksum:
+                    received_chunks[seq] = data
+                    client_socket.sendto(f"ACK:{seq}".encode(), (server_host, server_port))
+                    progress = (len(received_chunks) / total_chunks) * 100
 
-                    else:
-                        print(f"[-] Corrupted chunk {seq}, requesting retransmission...")
-                except Exception as e:
-                    print(f"Error processing packet: {e}")
+                    # Print milestones
+                    for milestone in progress_intervals:
+                        if progress >= milestone and milestone not in progress_reported:
+                            print(f"[{filename}] {milestone}% completed")
+                            progress_reported.add(milestone)
+                else:
+                    print(f"[-] Corrupted chunk {seq}, requesting retransmission...")
+            except Exception as e:
+                print(f"Error processing packet: {e}")
 
     # Start a thread to receive chunks while main thread handles flow control
     threading.Thread(target=receive_chunks, daemon=True).start()
