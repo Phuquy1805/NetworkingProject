@@ -66,8 +66,6 @@ sequenceDiagram
   end
 
 ```
-### Demo video
-***coming soon***
 ## Problem 2 : Using UDP to download files
 
 
@@ -121,5 +119,4 @@ sequenceDiagram
     Server-->>Client: END 
     Client->>Server: DONE 
 ```
-### Demo video
- ***coming soon***
+
